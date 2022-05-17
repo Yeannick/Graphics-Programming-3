@@ -31,6 +31,10 @@
     <ClCompile Include="Materials\Post\PostChromaticAbberation.cpp" />
     <ClCompile Include="Materials\SkyBoxMaterial.cpp" />
     <ClCompile Include="Prefabs\ExamPrefabs\Ratchet.cpp" />
+    <ClCompile Include="Materials\DiffuseAmbient.cpp" />
+    <ClCompile Include="Prefabs\ExamPrefabs\Crate.cpp" />
+    <ClCompile Include="Prefabs\ExamPrefabs\CrateParticle.cpp" />
+    <ClCompile Include="Prefabs\ExamPrefabs\BoltPickUp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h" />
@@ -62,5 +66,9 @@
     <ClInclude Include="Materials\Post\PostChromaticAbberation.h" />
     <ClInclude Include="Materials\SkyBoxMaterial.h" />
     <ClInclude Include="Prefabs\ExamPrefabs\Ratchet.h" />
+    <ClInclude Include="Materials\DiffuseAmbient.h" />
+    <ClInclude Include="Prefabs\ExamPrefabs\Crate.h" />
+    <ClInclude Include="Prefabs\ExamPrefabs\CrateParticle.h" />
+    <ClInclude Include="Prefabs\ExamPrefabs\BoltPickUp.h" />
   </ItemGroup>
 </Project>

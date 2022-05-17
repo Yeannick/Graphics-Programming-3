@@ -14,7 +14,7 @@ struct RatchetDesc
 	float maxMovementSpeed = 15.f ;
 	float maxFallingSpeed = 10.f ;
 
-	float jumpSpeed = 10.f;
+	float jumpSpeed = 20.f;
 
 	float movementAccelerationTime = 0.3f;
 	float fallOffAccelerationTime = 0.3f;
@@ -32,6 +32,14 @@ struct RatchetDesc
 	int action_id_Jump = -1; 
 	int action_id_Attack = -1;
 };
+enum AnimationState
+{
+	Idle,
+	Flip,
+	Attacking,
+	Jumping,
+	Running
+};
 class Ratchet : public GameObject
 {
 public:
@@ -45,6 +53,7 @@ public:
 
 	void DrawImGui();
 
+	void Animation();
 	void AddBolts();
 	void AddLife();
 	void PlayerHit();
@@ -70,9 +79,9 @@ private:
 
 	int m_JumpCounter = 0;
 	float m_AttackTimer = 0.f;
-	float m_AttackDuration = 0.5f;
+	float m_AttackDuration = 1.0f;
 
-	float m_CurrentAngle = 0.f;
+	
 
 	int m_PlayerLives = 5;
 	
@@ -81,6 +90,8 @@ private:
 	CameraComponent* m_pCameraComponent;
 	ControllerComponent* m_pControllerComponent;
 	ModelAnimator* m_pAnimator;
+
+	AnimationState m_State;
 
 	SpriteFont* m_pFont;
 	GameObject* m_Sprite;
@@ -94,11 +105,12 @@ private:
 	float m_FallAcceleration;
 	float m_MoveVelocity;
 	float m_MoveSpeed;
+	float m_CurrentAngle = 0.f;
 
 	XMFLOAT3 m_TotalVelocity;
 	XMFLOAT3 m_CurrentDirection;
 
-	float m_HitRange = 0.5f;
+	float m_HitRange = 0.9f;
 
 };
 

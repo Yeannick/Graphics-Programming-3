@@ -1,6 +1,7 @@
 #pragma once
 class Ratchet;
 class Character;
+class Crate;
 class RatchetScene final : public GameScene
 {
 public:
@@ -14,6 +15,8 @@ public:
 protected:
 	void Initialize() override;
 	void Update() override;
+	void PostDraw() override;
+	void OnGUI() override;
 private:
 	enum InputIds
 	{
@@ -26,5 +29,8 @@ private:
 	};
 
 	Ratchet* m_pCharacter{};
+	bool m_DrawShadowMap{ false };
+	float m_ShadowMapScale{ 0.3f };
+	std::vector<Crate*> m_pCrates;
 };
 
