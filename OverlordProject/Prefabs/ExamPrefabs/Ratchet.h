@@ -9,12 +9,13 @@ struct RatchetDesc
 		controller.radius = radius;
 		controller.height = height;
 		controller.material = pMaterial;
+		
 	}
 
-	float maxMovementSpeed = 15.f ;
-	float maxFallingSpeed = 10.f ;
+	float maxMovementSpeed = 40.f ;
+	float maxFallingSpeed = 20.f ;
 
-	float jumpSpeed = 20.f;
+	float jumpSpeed = 40.f;
 
 	float movementAccelerationTime = 0.3f;
 	float fallOffAccelerationTime = 0.3f;
@@ -68,6 +69,7 @@ protected:
 private:
 
 	void Attack(const SceneContext& sceneContext);
+	void AttackHit(GameObject* thisObject, GameObject* pOtherObject, PxTriggerAction action);
 
 	bool IsGrounded();
 
@@ -81,7 +83,7 @@ private:
 	float m_AttackTimer = 0.f;
 	float m_AttackDuration = 1.0f;
 
-	
+	GameObject* m_HitBox;
 
 	int m_PlayerLives = 5;
 	
@@ -110,7 +112,7 @@ private:
 	XMFLOAT3 m_TotalVelocity;
 	XMFLOAT3 m_CurrentDirection;
 
-	float m_HitRange = 0.9f;
+	float m_HitRange = 1.5f;
 
 };
 

@@ -100,15 +100,16 @@ void Ratchet::Initialize(const SceneContext&)
 	m_CharacterDesc.controller.stepOffset = 0.1f;
 	//m_pFont = ContentManager::Load<SpriteFont>(L"SpriteFonts/RatchetNClank.otf");
 	m_pControllerComponent = AddComponent(new ControllerComponent(m_CharacterDesc.controller));
-	//SoundManager::Get()->GetSystem()->createStream("Resources/Audio/Attack.wav", FMOD_DEFAULT, nullptr, &m_pAttackSound);
+	m_pControllerComponent->GetTransform()->Translate(XMFLOAT3{ 0,-1.5f,0 });	//SoundManager::Get()->GetSystem()->createStream("Resources/Audio/Attack.wav", FMOD_DEFAULT, nullptr, &m_pAttackSound);
 	const auto pCamera = AddChild(new FixedCamera());
 	m_pCameraComponent = pCamera->GetComponent<CameraComponent>();
 	m_pCameraComponent->SetActive(true); //Uncomment to make this camera the active camera
 
-	m_pCameraComponent->GetTransform()->Translate(0.f, m_CharacterDesc.controller.height * 1.5f, -8.f);
+	m_pCameraComponent->GetTransform()->Translate(0.f, m_CharacterDesc.controller.height * 1.5f, -50.f);
 	m_pCameraComponent->GetTransform()->Rotate(15.f, 0.f, 0.f , true);
+	
 	//m_pControllerComponent = AddComponent(new ControllerComponent(m_CharacterDesc.controller));
-
+	//m_pControllerComponent->GetTransform()->Translate(0, -0.5f, 0);
 	// Model 
 
 	const auto pMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow_Skinned>();
@@ -124,8 +125,8 @@ void Ratchet::Initialize(const SceneContext&)
 	auto model = m_pModelObject->AddComponent(new ModelComponent(L"Meshes/Ratchet.ovm"));
 	model->SetMaterial(pMaterial,0);
 	model->GetTransform()->Rotate(0.f, 180.f, 0.f);
-	model->GetTransform()->Scale(0.05f);
-	model->GetTransform()->Translate(0.f,-1.25f,0.f);
+	model->GetTransform()->Scale(0.25f);
+	model->GetTransform()->Translate(0.f,-6.f,0.f);
 	//model->SetMaterial(pMaterial1,1);
 	//model->SetMaterial(pMaterial2,2);
 	//model->SetMaterial(pMaterial3,3);
@@ -134,11 +135,23 @@ void Ratchet::Initialize(const SceneContext&)
 	m_pAnimator->SetAnimation(0);
 	m_pAnimator->Play();
 
+	m_HitBox = new GameObject();
+
+	auto pDefaultMaterial = PxGetPhysics().createMaterial(.5f, .5f, 1.f);
+	auto rigidBody = new RigidBodyComponent(true);
+	m_HitBox->AddComponent(rigidBody);
+	rigidBody->AddCollider(PxBoxGeometry{ 5.f,1.f,5.f },*pDefaultMaterial,true);
+	AddChild(m_HitBox);
+
+	
+	SetOnTriggerCallBack(std::bind(&AttackHit, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	m_State = AnimationState::Idle;
+	//GetTransform()->Translate(0, 50.f, 0);
 }
 
 void Ratchet::Update(const SceneContext& sceneContext)
 {
+	m_HitBox->GetTransform()->Translate(GetTransform()->GetPosition());
 	Animation();
 	if (m_pCameraComponent->IsActive())
 	{
@@ -201,7 +214,7 @@ void Ratchet::Update(const SceneContext& sceneContext)
 				m_State = AnimationState::Running;
 			}
 			XMVECTOR newDirection = (forward * move.y) + (right * move.x);
-
+			//transformComponent->Rotate(m_CurrentDirection);
 
 			XMStoreFloat3(&m_CurrentDirection, newDirection);
 			if (!m_IsAttacking)
@@ -221,6 +234,16 @@ void Ratchet::Update(const SceneContext& sceneContext)
 			if (!m_IsAttacking)
 			{
 				m_pModelObject->GetTransform()->Rotate(0, m_CurrentAngle, 0, false);
+				XMVECTOR position = XMLoadFloat3(&GetTransform()->GetPosition());
+				
+				XMVECTOR dir = XMLoadFloat3(&GetTransform()->GetForward());
+				XMVector3Normalize(dir);
+				auto rayDirection = dir;
+				auto rayPosition = position + rayDirection * m_CharacterDesc.controller.radius;
+				XMFLOAT3 debugDirection{};
+				XMStoreFloat3(&debugDirection, rayDirection);
+				DebugRenderer::DrawLine(m_pModelObject->GetTransform()->GetPosition(), debugDirection, XMFLOAT4{ Colors::Blue });
+				//transformComponent->Rotate(0, m_CurrentAngle, 0, false);
 			}
 			
 		}
@@ -264,10 +287,10 @@ void Ratchet::Update(const SceneContext& sceneContext)
 
 			Jump(sceneContext);
 		}
-		else if (!m_IsGrounded && m_JumpCounter == 1 && sceneContext.pInput->IsActionTriggered((int)m_CharacterDesc.action_id_Jump))
+		/*else if (!m_IsGrounded && m_JumpCounter == 1 && sceneContext.pInput->IsActionTriggered((int)m_CharacterDesc.action_id_Jump))
 		{
 			DoubleJump(sceneContext);
-		}
+		}*/
 		
 
 		m_pControllerComponent->Move(m_TotalVelocity);
@@ -292,66 +315,83 @@ void Ratchet::Attack(const SceneContext& sceneContext)
 		m_AttackTimer = 0.f;
 	}
 
-	int AmountOfRays = 10;
-	XMVECTOR forward = XMLoadFloat3(&GetTransform()->GetForward());
-	XMMATRIX rotationMatrix{};
-	XMVECTOR rayPosition{};
-	XMVECTOR rayDirection{};
-	XMVECTOR position = XMLoadFloat3(&GetTransform()->GetPosition());
+	
 
-	rayPosition = position + forward * m_CharacterDesc.controller.radius;
-	PxVec3 rayStart(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
-	PxVec3 raydir(forward.m128_f32[0], forward.m128_f32[1], forward.m128_f32[2]);
+	//int AmountOfRays = 10;
+	//XMVECTOR forward = XMLoadFloat3(&GetTransform()->GetForward());
+	//XMMATRIX rotationMatrix{};
+	//XMVECTOR rayPosition{};
+	//XMVECTOR rayDirection{};
+	//XMVECTOR position = XMLoadFloat3(&GetTransform()->GetPosition());
 
-	PxRaycastBuffer hit{};
-	PxQueryFilterData filterData{};
+	//rayPosition = position + forward * m_CharacterDesc.controller.radius;
+	//PxVec3 rayStart(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
+	//PxVec3 raydir(forward.m128_f32[0], forward.m128_f32[1], forward.m128_f32[2]);
 
-	XMFLOAT3 debugPosition{};
-	XMFLOAT3 debugDirection{};
+	//PxRaycastBuffer hit{};
+	//PxQueryFilterData filterData{};
 
-	for (int i = 0; i < AmountOfRays; ++i)
+	//XMFLOAT3 debugPosition{};
+	//XMFLOAT3 debugDirection{};
+
+	//for (int i = 0; i < AmountOfRays; ++i)
+	//{
+	//	rotationMatrix = XMMatrixRotationY(i * 18.f);
+	//	XMVECTOR dir = XMLoadFloat3(&GetTransform()->GetForward());
+	//	XMVector3Normalize(dir);
+	//	rayDirection = XMVector3TransformNormal(dir, rotationMatrix);
+	//	rayPosition = position + rayDirection * m_CharacterDesc.controller.radius;
+	//	
+	//	//DebugRenderer::DrawLine(m_pModelObject->GetTransform()->GetPosition(), debugDirection, XMFLOAT4{ Colors::Blue });
+	//	if (i % 2 == 0)
+	//	{
+	//		XMVECTOR up = XMLoadFloat3(&GetTransform()->GetUp());
+
+	//		rayPosition += -up * 0.5f;
+	//		;
+	//	}
+
+	//	rayStart = PxVec3(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
+	//	raydir = PxVec3{ rayDirection.m128_f32[0],rayDirection.m128_f32[1] ,rayDirection.m128_f32[2] };
+
+
+	//	if (GetScene()->GetPhysxProxy()->Raycast(rayStart, raydir, m_HitRange, hit, PxHitFlag::eDEFAULT, filterData))
+	//	{
+	//		XMStoreFloat3(&debugPosition, rayPosition);
+	//		XMStoreFloat3(&debugDirection,rayDirection);
+	//		DebugRenderer::DrawLine(debugPosition, debugDirection, XMFLOAT4{ Colors::Blue });
+
+	//		auto actor = static_cast<RigidBodyComponent*>(hit.block.actor->userData);
+	//		Logger::LogDebug(L"Hit object {}", actor->GetGameObject()->GetTag());
+	//		GameObject* pGameobject = actor->GetGameObject();
+	//		if (pGameobject->GetTag() == L"Crate")
+	//		{
+	//			if (pGameobject->GetParent() != nullptr)
+	//				pGameobject = pGameobject->GetParent();
+
+	//			Crate* pCrate = static_cast<Crate*>(pGameobject);
+	//			if (!pCrate->IsHit())
+	//			{
+	//				pCrate->Destroy();
+	//			}
+	//			
+	//			return;
+	//		}
+	//	}
+	//}
+}
+
+void Ratchet::AttackHit(GameObject* thisObject, GameObject* pOtherObject, PxTriggerAction action)
+{
+
+	if (pOtherObject->GetTag() == L"Crate" && action == PxTriggerAction::ENTER)
 	{
-		rotationMatrix = XMMatrixRotationY(i * 18.f);
-		XMVECTOR dir = XMLoadFloat3(&m_pModelObject->GetTransform()->GetForward());
-		XMVector3Normalize(dir);
-		rayDirection = XMVector3TransformNormal(dir, rotationMatrix);
-		rayPosition = position + rayDirection * m_CharacterDesc.controller.radius;
-
-		if (i % 2 == 0)
+		auto pCrate = static_cast<Crate*>(pOtherObject);
+		if (!pCrate->IsHit())
 		{
-			XMVECTOR up = XMLoadFloat3(&GetTransform()->GetUp());
-
-			rayPosition += -up * 0.5f;
-			;
+			pCrate->Destroy();
 		}
-
-		rayStart = PxVec3(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
-		raydir = PxVec3{ rayDirection.m128_f32[0],rayDirection.m128_f32[1] ,rayDirection.m128_f32[2] };
-
-
-		if (GetScene()->GetPhysxProxy()->Raycast(rayStart, raydir, m_HitRange, hit, PxHitFlag::eDEFAULT, filterData))
-		{
-			XMStoreFloat3(&debugPosition, rayPosition);
-			XMStoreFloat3(&debugDirection, rayDirection);
-			DebugRenderer::DrawLine(debugPosition, debugDirection, XMFLOAT4{ Colors::Blue });
-
-			auto actor = static_cast<RigidBodyComponent*>(hit.block.actor->userData);
-			Logger::LogDebug(L"Hit object {}", actor->GetGameObject()->GetTag());
-			GameObject* pGameobject = actor->GetGameObject();
-			if (pGameobject->GetTag() == L"Crate")
-			{
-				if (pGameobject->GetParent() != nullptr)
-					pGameobject = pGameobject->GetParent();
-
-				Crate* pCrate = static_cast<Crate*>(pGameobject);
-				if (!pCrate->IsHit())
-				{
-					pCrate->Destroy();
-				}
-				
-				return;
-			}
-		}
+		//SceneManager::Get()->GetActiveScene()->RemoveChild(pOtherObject, true);
 	}
 }
 
@@ -359,13 +399,14 @@ bool Ratchet::IsGrounded()
 {
 	PxVec3 rayStart = PxVec3{ m_pControllerComponent->GetFootPosition().x, m_pControllerComponent->GetFootPosition().y + .1f ,m_pControllerComponent->GetFootPosition().z };
 	PxVec3 rayDir{ 0, -1, 0 };
-	float distance{ 2*m_CharacterDesc.controller.stepOffset + m_CharacterDesc.controller.stepOffset };
+	float distance{4* m_CharacterDesc.controller.stepOffset + m_CharacterDesc.controller.stepOffset };
 
 	PxQueryFilterData filterData{};
 	filterData.data.word0 = ~UINT(CollisionGroup::None);
 	PxRaycastBuffer hit{};
 
-	DebugRenderer::DrawLine(m_pControllerComponent->GetFootPosition(), XMFLOAT3{ rayStart.x + 0, rayStart.y - 1 * distance, rayStart.z + 0 }, XMFLOAT4{ Colors::Red });
+	DebugRenderer::DrawLine(m_pControllerComponent->GetFootPosition(), XMFLOAT3{ rayStart.x + 0, rayStart.y  * distance, rayStart.z + 0 }, XMFLOAT4{ Colors::Red });
 	m_JumpCounter = 0;
 	return GetScene()->GetPhysxProxy()->Raycast(rayStart, rayDir, distance, hit);
+		
 }

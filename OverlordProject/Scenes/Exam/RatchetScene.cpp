@@ -18,7 +18,7 @@ void RatchetScene::Initialize()
 {
 	m_SceneContext.settings.drawGrid = false;
 	m_SceneContext.settings.enableOnGUI = true;
-	m_SceneContext.pLights->SetDirectionalLight({ -20.f,40.f,-55.f }, { 0.305f, -0.307f, 0.901f });
+	m_SceneContext.pLights->SetDirectionalLight({ -20.f,30.f,-5.f }, { 0.305f, -0.307f, 0.901f });
 	// Materials
 
 	const auto pGroundMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
@@ -54,22 +54,22 @@ void RatchetScene::Initialize()
 
 	const auto pIslandActor = pIsland->AddComponent(new RigidBodyComponent(true));
 	const auto pTriangleMeshIsland = ContentManager::Load<PxTriangleMesh>(L"Meshes/Lava.ovpt");
-	pIslandActor->AddCollider(PxTriangleMeshGeometry(pTriangleMeshIsland, PxMeshScale({ 5.f,5.f,5.f })), *pDefaultMaterial);
+	pIslandActor->AddCollider(PxTriangleMeshGeometry(pTriangleMeshIsland, PxMeshScale({ 10.f,10.f,10.f })), *pDefaultMaterial);
 
 	pIsland->AddComponent(pIslandModel);
 	//pIsland->GetTransform()->Rotate(, 0, 0);
-	pIsland->GetTransform()->Scale(5.f);
+	pIsland->GetTransform()->Scale(10.f);
 	AddChild(pIsland);
 	// Crates
 
-	AddChild(new Crate(XMFLOAT3{ 5,5,0 }, CrateType::ExplosiveCrate));
+	AddChild(new Crate(XMFLOAT3{ 10,20,0 }, CrateType::ExplosiveCrate));
 	//AddChild(new BoltPickUp(XMFLOAT3{ 5,10,0 }));
 	//m_pCrates.push_back(AddChild(new Crate(XMFLOAT3{ 0,5,0 }, CrateType::BoltCrate)));
 	//AddChild(new CrateParticle(XMFLOAT3{ 0,8,0 }, 2.0f));
 	
 	 //Player
 
-	RatchetDesc characterDesc{ pDefaultMaterial,.75f,3.f };
+	RatchetDesc characterDesc{ pDefaultMaterial,2.5f,10.f };
 	characterDesc.action_id_MoveForward = CharacterMoveForward;
 	characterDesc.action_id_MoveBackward = CharacterMoveBackward;
 	characterDesc.action_id_MoveLeft = CharacterMoveLeft;
@@ -78,8 +78,8 @@ void RatchetScene::Initialize()
 	characterDesc.action_id_Attack = CharacterAttack;
 
 	m_pCharacter = AddChild(new Ratchet(characterDesc));
-	m_pCharacter->GetTransform()->Translate(0.f, 8.f, 0.f);
-	m_pCharacter->GetTransform()->Scale(1.5f);
+	m_pCharacter->GetTransform()->Translate(0.f, 50.f, 0.f);
+	//m_pCharacter->GetTransform()->Scale(.f);
 	//m_pCharacter->GetTransform()->Rotate(0.f,0.f,90.f);
 
 	auto inputAction = InputAction(CharacterMoveLeft, InputState::down, 'A');
@@ -100,24 +100,28 @@ void RatchetScene::Initialize()
 	inputAction = InputAction(CharacterAttack, InputState::pressed, 'Q');
 	m_SceneContext.pInput->AddInputAction(inputAction);
 	
-	inputAction = InputAction(10, InputState::pressed, 'P');
-	m_SceneContext.pInput->AddInputAction(inputAction);
+	
 }
 
 void RatchetScene::Update()
 {
-	if (m_SceneContext.pInput->IsActionTriggered(10))
-	{
-		//
-	}
+	
+		//const auto pCameraTransform = m_SceneContext.pCamera->GetTransform();
+		//m_SceneContext.pLights->SetDirectionalLight({ -200.f,100.f,-750.f }, pCameraTransform->GetForward());
+		
 }
 
 void RatchetScene::PostDraw()
 {
-	
+	/*if (m_DrawShadowMap) {
+
+		ShadowMapRenderer::Get()->Debug_DrawDepthSRV({ m_SceneContext.windowWidth - 10.f, 10.f }, { m_ShadowMapScale, m_ShadowMapScale }, { 1.f,0.f });
+	}*/
 }
 
 void RatchetScene::OnGUI()
 {
-	
+	/*ImGui::Checkbox("Draw ShadowMap", &m_DrawShadowMap);
+	ImGui::SliderFloat("ShadowMap Scale", &m_ShadowMapScale, 0.f, 1.f);
+	MaterialManager::Get()->GetMaterial(1)->DrawImGui();*/
 }

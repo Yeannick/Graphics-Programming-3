@@ -19,7 +19,8 @@ private:
 	bool IsPickedUp = false ;
 
 	FMOD::Sound* m_pSound{ nullptr };
-
+	RigidBodyComponent* m_RigidBodyTrigger;
+	RigidBodyComponent* m_RigidBody;
 	void CollectBolt(GameObject* pTriggerObject, GameObject* pOtherObject, PxTriggerAction action);
 };
 

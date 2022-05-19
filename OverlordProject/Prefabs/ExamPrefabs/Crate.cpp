@@ -9,7 +9,7 @@ Crate::Crate(const XMFLOAT3& Position, CrateType type):
 	m_Position(Position),
 	m_Type(type)
 {
-	GetTransform()->Scale(0.1f);
+	GetTransform()->Scale(0.25f);
 	
 }
 
@@ -21,8 +21,7 @@ void Crate::Destroy()
 {
 	m_Hit = true;
 	auto pos = GetTransform()->GetPosition();
-	m_ParticleEffect = AddChild(new CrateParticle({pos.x , pos.y + 1.5f , pos.z}, 1.0f));
-	m_ParticleEffect->SetActive();
+	SceneManager::Get()->GetActiveScene()->AddChild(new CrateParticle({pos.x , pos.y + 1.5f , pos.z}, 1.0f));
 	RemoveComponent(m_pModel);
 	SceneManager::Get()->GetActiveScene()->AddChild(new BoltPickUp(GetTransform()->GetPosition()));
 }
@@ -36,9 +35,11 @@ void Crate::Initialize(const SceneContext&)
 
 	auto pMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial_Shadow>();
 	auto pGlassMaterial = MaterialManager::Get()->CreateMaterial<DiffuseMaterial>();
-	const auto pActor = AddComponent(new RigidBodyComponent(true));
-	const auto pTriangleMesh = ContentManager::Load<PxTriangleMesh>(L"Meshes/Crate.ovpt");
-	pActor->AddCollider(PxTriangleMeshGeometry(pTriangleMesh, PxMeshScale({ 0.1f,0.1f,0.1f })), *pDefaultMaterial);
+	const auto pActor = AddComponent(new RigidBodyComponent(false));
+	const auto convexMesh = ContentManager::Load<PxConvexMesh>(L"Meshes/Crate.ovpc");
+	auto PxConvex = PxConvexMeshGeometry{ convexMesh };
+	PxConvex.scale = PxMeshScale{ 0.25f };
+	pActor->AddCollider(PxConvex, *pDefaultMaterial , false);
 	switch (m_Type)
 	{
 	case CrateType::BoltCrate:
@@ -52,11 +53,14 @@ void Crate::Initialize(const SceneContext&)
 		m_pModel->SetMaterial(pMaterial,0);
 		pGlassMaterial->SetDiffuseTexture(L"Textures/CrateGlass.png");
 		m_pModel->SetMaterial(pGlassMaterial,1);
+
 		break;
 	case CrateType::ExplosiveCrate:
 		m_pModel = AddComponent(new ModelComponent(L"Meshes/CrateExp.ovm"));
 		pMaterial->SetDiffuseTexture(L"Textures/CrateExp.png");
 		m_pModel->SetMaterial(pMaterial);
+		
+
 		break;
 	default:
 		break;
@@ -64,13 +68,10 @@ void Crate::Initialize(const SceneContext&)
 
 }
 
-void Crate::Update(const SceneContext& sceneContext )
+void Crate::Update(const SceneContext&  )
 {
-	if (sceneContext.pInput->IsActionTriggered(10))
-	{
-		Destroy();
-	}
-	if (m_Hit && m_ParticleEffect->IsFinished())
+	
+	if (m_Hit)
 	{
 	//SoundManager::Get()->GetSystem()->playSound(m_pCrateBreakSound, nullptr, false, nullptr);
 		

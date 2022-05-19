@@ -17,15 +17,15 @@ CrateParticle::CrateParticle(const XMFLOAT3& position, const std::wstring& asset
 void CrateParticle::Initialize(const SceneContext&)
 {
 	ParticleEmitterSettings setting;
-	setting.velocity = { 0.f,0.25f,0.f };
-	setting.minSize = 0.1f;
-	setting.maxSize = 0.5f;
+	setting.velocity = { 0.f,0.50f,0.f };
+	setting.minSize = 1.f;
+	setting.maxSize = 5.f;
 	setting.minEnergy = 1.f;
 	setting.maxEnergy = 3.5f;
-	setting.minScale = 0.1f;
-	setting.maxScale = 0.5f;
-	setting.minEmitterRadius = 0.2f;
-	setting.maxEmitterRadius = 2.f;
+	setting.minScale = 1.0f;
+	setting.maxScale = 5.0f;
+	setting.minEmitterRadius = 2.f;
+	setting.maxEmitterRadius = 20.f;
 	setting.color = { 1.f,1.f,1.f,0.5f };
 
 	AddComponent(new ParticleEmitterComponent(m_ParticleFile, setting, 1600));
@@ -33,14 +33,16 @@ void CrateParticle::Initialize(const SceneContext&)
 
 void CrateParticle::Update(const SceneContext& sceneContext)
 {
-	if (m_IsActive)
-	{
+	
 		m_TimeCounter += sceneContext.pGameTime->GetElapsed();
 
 		if (m_TimeCounter >= m_ParticleLifeTime)
 		{
 			m_IsDone = true;
 		}
-	}
+		if (m_IsDone)
+		{
+			SceneManager::Get()->GetActiveScene()->RemoveChild(this, true);
+		}
 	
 }
