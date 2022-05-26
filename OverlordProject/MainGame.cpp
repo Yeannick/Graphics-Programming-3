@@ -10,11 +10,11 @@
 //#define W8
 //#define W9
 //#define W10
-#define Exam
+//#define Exam
 /*MILESTONE Content*/
 //#define MILESTONE_1
 //#define MILESTONE_2
-//#define MILESTONE_3
+#define MILESTONE_3
 
 #pragma region Lab/Milestone Includes
 #ifdef W3

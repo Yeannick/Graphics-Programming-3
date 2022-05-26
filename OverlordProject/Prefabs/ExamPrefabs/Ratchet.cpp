@@ -135,23 +135,25 @@ void Ratchet::Initialize(const SceneContext&)
 	m_pAnimator->SetAnimation(0);
 	m_pAnimator->Play();
 
-	m_HitBox = new GameObject();
 
-	auto pDefaultMaterial = PxGetPhysics().createMaterial(.5f, .5f, 1.f);
+	const auto pDefaultMaterial = PxGetPhysics().createMaterial(0.5f, 0.5f, 0.5f);
+	m_pRatchetAttack = new GameObject();
+
 	auto rigidBody = new RigidBodyComponent(true);
-	m_HitBox->AddComponent(rigidBody);
-	rigidBody->AddCollider(PxBoxGeometry{ 5.f,1.f,5.f },*pDefaultMaterial,true);
-	AddChild(m_HitBox);
+	rigidBody->AddCollider(PxBoxGeometry{ 5.f,4.f,5.f }, *pDefaultMaterial, true);
+	m_pRatchetAttack->AddComponent(rigidBody);
 
-	
-	SetOnTriggerCallBack(std::bind(&AttackHit, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	AddChild(m_pRatchetAttack);
+	m_pRatchetAttack->SetOnTriggerCallBack(std::bind(&Ratchet::OnTriggerCallBack, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+//	GetScene()->AddChild(m_HitBox);
 	m_State = AnimationState::Idle;
 	//GetTransform()->Translate(0, 50.f, 0);
 }
 
 void Ratchet::Update(const SceneContext& sceneContext)
 {
-	m_HitBox->GetTransform()->Translate(GetTransform()->GetPosition());
+	m_pRatchetAttack->GetTransform()->Translate(GetTransform()->GetPosition());
+
 	Animation();
 	if (m_pCameraComponent->IsActive())
 	{
@@ -307,93 +309,52 @@ void Ratchet::Attack(const SceneContext& sceneContext)
 {
 	m_State = AnimationState::Attacking;
 
+	
 	m_AttackTimer += sceneContext.pGameTime->GetElapsed();
+
+	if (IsInCollider)
+	{
+		if (m_pCollisionObject)
+		{
+			if (m_pCollisionObject->GetTag() == L"Crate")
+			{
+				auto pCrate = static_cast<Crate*>(m_pCollisionObject);
+				if (!pCrate->IsHit())
+				{
+					pCrate->Destroy();
+				}
+			}
+		}
+	}
 
 	if (m_AttackTimer >= m_AttackDuration)
 	{
 		m_IsAttacking = false;
 		m_AttackTimer = 0.f;
-	}
-
 	
-
-	//int AmountOfRays = 10;
-	//XMVECTOR forward = XMLoadFloat3(&GetTransform()->GetForward());
-	//XMMATRIX rotationMatrix{};
-	//XMVECTOR rayPosition{};
-	//XMVECTOR rayDirection{};
-	//XMVECTOR position = XMLoadFloat3(&GetTransform()->GetPosition());
-
-	//rayPosition = position + forward * m_CharacterDesc.controller.radius;
-	//PxVec3 rayStart(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
-	//PxVec3 raydir(forward.m128_f32[0], forward.m128_f32[1], forward.m128_f32[2]);
-
-	//PxRaycastBuffer hit{};
-	//PxQueryFilterData filterData{};
-
-	//XMFLOAT3 debugPosition{};
-	//XMFLOAT3 debugDirection{};
-
-	//for (int i = 0; i < AmountOfRays; ++i)
-	//{
-	//	rotationMatrix = XMMatrixRotationY(i * 18.f);
-	//	XMVECTOR dir = XMLoadFloat3(&GetTransform()->GetForward());
-	//	XMVector3Normalize(dir);
-	//	rayDirection = XMVector3TransformNormal(dir, rotationMatrix);
-	//	rayPosition = position + rayDirection * m_CharacterDesc.controller.radius;
-	//	
-	//	//DebugRenderer::DrawLine(m_pModelObject->GetTransform()->GetPosition(), debugDirection, XMFLOAT4{ Colors::Blue });
-	//	if (i % 2 == 0)
-	//	{
-	//		XMVECTOR up = XMLoadFloat3(&GetTransform()->GetUp());
-
-	//		rayPosition += -up * 0.5f;
-	//		;
-	//	}
-
-	//	rayStart = PxVec3(rayPosition.m128_f32[0], rayPosition.m128_f32[1], rayPosition.m128_f32[2]);
-	//	raydir = PxVec3{ rayDirection.m128_f32[0],rayDirection.m128_f32[1] ,rayDirection.m128_f32[2] };
-
-
-	//	if (GetScene()->GetPhysxProxy()->Raycast(rayStart, raydir, m_HitRange, hit, PxHitFlag::eDEFAULT, filterData))
-	//	{
-	//		XMStoreFloat3(&debugPosition, rayPosition);
-	//		XMStoreFloat3(&debugDirection,rayDirection);
-	//		DebugRenderer::DrawLine(debugPosition, debugDirection, XMFLOAT4{ Colors::Blue });
-
-	//		auto actor = static_cast<RigidBodyComponent*>(hit.block.actor->userData);
-	//		Logger::LogDebug(L"Hit object {}", actor->GetGameObject()->GetTag());
-	//		GameObject* pGameobject = actor->GetGameObject();
-	//		if (pGameobject->GetTag() == L"Crate")
-	//		{
-	//			if (pGameobject->GetParent() != nullptr)
-	//				pGameobject = pGameobject->GetParent();
-
-	//			Crate* pCrate = static_cast<Crate*>(pGameobject);
-	//			if (!pCrate->IsHit())
-	//			{
-	//				pCrate->Destroy();
-	//			}
-	//			
-	//			return;
-	//		}
-	//	}
-	//}
-}
-
-void Ratchet::AttackHit(GameObject* thisObject, GameObject* pOtherObject, PxTriggerAction action)
-{
-
-	if (pOtherObject->GetTag() == L"Crate" && action == PxTriggerAction::ENTER)
-	{
-		auto pCrate = static_cast<Crate*>(pOtherObject);
-		if (!pCrate->IsHit())
-		{
-			pCrate->Destroy();
-		}
-		//SceneManager::Get()->GetActiveScene()->RemoveChild(pOtherObject, true);
 	}
+	
 }
+
+void Ratchet::OnTriggerCallBack(GameObject* , GameObject* pOtherObject, PxTriggerAction action)
+{
+	
+		if (pOtherObject->GetTag() == L"Crate" && action == PxTriggerAction::ENTER)
+		{
+			IsInCollider = true;
+			m_pCollisionObject = pOtherObject;
+				
+		}
+		if (pOtherObject->GetTag() == L"Crate" && action == PxTriggerAction::LEAVE)
+		{
+			IsInCollider = false;
+			m_pCollisionObject = nullptr;
+		}
+	
+	
+}
+
+
 
 bool Ratchet::IsGrounded()
 {

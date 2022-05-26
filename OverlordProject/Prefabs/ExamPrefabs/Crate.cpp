@@ -21,9 +21,14 @@ void Crate::Destroy()
 {
 	m_Hit = true;
 	auto pos = GetTransform()->GetPosition();
-	SceneManager::Get()->GetActiveScene()->AddChild(new CrateParticle({pos.x , pos.y + 1.5f , pos.z}, 1.0f));
-	RemoveComponent(m_pModel);
+
+	
+	SceneManager::Get()->GetActiveScene()->AddChild(new CrateParticle({ pos.x , pos.y + 1.5f , pos.z }, 1.0f));
+
+	
+	
 	SceneManager::Get()->GetActiveScene()->AddChild(new BoltPickUp(GetTransform()->GetPosition()));
+	RemoveComponent(m_pModel);
 }
 
 void Crate::Initialize(const SceneContext&)
@@ -48,7 +53,7 @@ void Crate::Initialize(const SceneContext&)
 		m_pModel->SetMaterial(pMaterial);
 		break;
 	case CrateType::NanoTechCrate:
-		m_pModel = AddComponent(new ModelComponent(L"Meshes/Crate.ovm"));
+		m_pModel = AddComponent(new ModelComponent(L"Meshes/CrateNano.ovm"));
 		pMaterial->SetDiffuseTexture(L"Textures/CrateNano.png");
 		m_pModel->SetMaterial(pMaterial,0);
 		pGlassMaterial->SetDiffuseTexture(L"Textures/CrateGlass.png");

@@ -28,7 +28,7 @@ void CrateParticle::Initialize(const SceneContext&)
 	setting.maxEmitterRadius = 20.f;
 	setting.color = { 1.f,1.f,1.f,0.5f };
 
-	AddComponent(new ParticleEmitterComponent(m_ParticleFile, setting, 1600));
+	AddComponent(new ParticleEmitterComponent(m_ParticleFile, setting, 1000));
 }
 
 void CrateParticle::Update(const SceneContext& sceneContext)

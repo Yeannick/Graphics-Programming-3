@@ -28,12 +28,11 @@ void ParticleEmitterComponent::Initialize(const SceneContext& sceneContext)
 {
 	//TODO_W9(L"Implement Initialize")
 
-	if (!m_pParticleMaterial)
-	{
+	
 		m_pParticleMaterial = MaterialManager::Get()->CreateMaterial<ParticleMaterial>();
 		CreateVertexBuffer(sceneContext);
 		m_pParticleTexture = ContentManager::Load<TextureData>(m_AssetFile);
-	}
+	
 }
 
 void ParticleEmitterComponent::CreateVertexBuffer(const SceneContext& sceneContext)

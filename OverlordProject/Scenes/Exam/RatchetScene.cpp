@@ -14,6 +14,7 @@
 #include "Prefabs/ExamPrefabs/BoltPickUp.h"
 
 
+
 void RatchetScene::Initialize()
 {
 	m_SceneContext.settings.drawGrid = false;
@@ -62,7 +63,12 @@ void RatchetScene::Initialize()
 	AddChild(pIsland);
 	// Crates
 
-	AddChild(new Crate(XMFLOAT3{ 10,20,0 }, CrateType::ExplosiveCrate));
+	AddChild(new Crate(XMFLOAT3{ 0,20,0 }, CrateType::ExplosiveCrate));
+	AddChild(new Crate(XMFLOAT3{ -10,20,0 }, CrateType::BoltCrate));
+	AddChild(new Crate(XMFLOAT3{ 15,20,0 }, CrateType::NanoTechCrate));
+
+	//AddChild(new LavaParticle(XMFLOAT3{ -15 , 10 , 15 }, 3.f));
+
 	//AddChild(new BoltPickUp(XMFLOAT3{ 5,10,0 }));
 	//m_pCrates.push_back(AddChild(new Crate(XMFLOAT3{ 0,5,0 }, CrateType::BoltCrate)));
 	//AddChild(new CrateParticle(XMFLOAT3{ 0,8,0 }, 2.0f));
@@ -78,7 +84,7 @@ void RatchetScene::Initialize()
 	characterDesc.action_id_Attack = CharacterAttack;
 
 	m_pCharacter = AddChild(new Ratchet(characterDesc));
-	m_pCharacter->GetTransform()->Translate(0.f, 50.f, 0.f);
+	m_pCharacter->GetTransform()->Translate(10.f, 50.f, 0.f);
 	//m_pCharacter->GetTransform()->Scale(.f);
 	//m_pCharacter->GetTransform()->Rotate(0.f,0.f,90.f);
 

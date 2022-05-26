@@ -60,7 +60,7 @@ public:
 	void PlayerHit();
 	void Jump(const SceneContext& sceneContext);
 	void DoubleJump(const SceneContext& sceneContext);
-
+	void OnTriggerCallBack(GameObject* pThis, GameObject* pOtherObject, PxTriggerAction action);
 protected:
 	void Initialize(const SceneContext&) override;
 	void Update(const SceneContext&) override;
@@ -69,8 +69,7 @@ protected:
 private:
 
 	void Attack(const SceneContext& sceneContext);
-	void AttackHit(GameObject* thisObject, GameObject* pOtherObject, PxTriggerAction action);
-
+	
 	bool IsGrounded();
 
 	int m_Bolts;
@@ -82,8 +81,6 @@ private:
 	int m_JumpCounter = 0;
 	float m_AttackTimer = 0.f;
 	float m_AttackDuration = 1.0f;
-
-	GameObject* m_HitBox;
 
 	int m_PlayerLives = 5;
 	
@@ -113,6 +110,12 @@ private:
 	XMFLOAT3 m_CurrentDirection;
 
 	float m_HitRange = 1.5f;
+	
+	GameObject* m_pRatchetAttack;
 
+	bool IsInCollider = false;
+	GameObject* m_pCollisionObject = nullptr;
+	
+	
 };
 
